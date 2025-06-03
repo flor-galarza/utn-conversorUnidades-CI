@@ -1,0 +1,29 @@
+name: CI SvelteKit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Correr tests unitarios (Vitest)
+        run: npm run test:unit
+
+      - name: Correr tests E2E (Playwright)
+        run: npx playwright install && npm run test:e2e
