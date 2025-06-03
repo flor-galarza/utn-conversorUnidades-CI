@@ -27,3 +27,26 @@ jobs:
 
       - name: Correr tests E2E (Playwright)
         run: npx playwright install && npm run test:e2e
+      
+      
+      - name: Notificar a Slack si CI tiene éxito
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "✅ CI exitoso en *${{ github.repository }}*.\nVer: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notificar a Slack si CI falla
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "❌ Falló el CI de *${{ github.repository }}*.\nDetalles: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
