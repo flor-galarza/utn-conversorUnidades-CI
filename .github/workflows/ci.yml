@@ -2,9 +2,10 @@ name: CI SvelteKit
 
 on:
   push:
-    branches: [main]
+    branches: ["*"]
   pull_request:
     branches: [main]
+
 
 jobs:
   build-test:
