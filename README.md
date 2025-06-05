@@ -41,4 +41,4 @@ You can preview the production build with `npm run preview`.
 # Conversor de Temperatura
 
 Actualización de prueba para CI con Slack.
-holaaa 
+holaaa cambio para ver si pasa a progress
