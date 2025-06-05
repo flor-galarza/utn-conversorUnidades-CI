@@ -51,17 +51,32 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+          
 
-      - name: Mover a "En curso" si commit contiene #start
-        if: contains(github.event.head_commit.message, '#start')
+      - name: Detectar si el commit incluye un issue SCRUM-# y #start
         run: |
-          ISSUE_KEY=$(echo "${{ github.event.head_commit.message }}" | grep -oE 'SCRUM-[0-9]+')
-          echo "Moviendo $ISSUE_KEY a En curso..."
-          curl --request POST \
-            --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-            --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            --header "Content-Type: application/json" \
-            --data '{"transition": {"id": "21"}}'
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit: $COMMIT_MESSAGE"
+          ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
+          
+          if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
+            echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "21"}}'
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "31"}}'
+          else
+            echo "No se detectó acción válida para Jira."
+          fi
+
 
       - name: Mover a "Listo" si commit fue a main y CI pasó
         if: github.ref == 'refs/heads/main' && success()
