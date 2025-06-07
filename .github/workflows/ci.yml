@@ -94,6 +94,8 @@ jobs:
            else
              echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
            fi
+        shell: bash
+        continue-on-error: true
 
       - name: Instalar Netlify CLI
         run: npm install -g netlify-cli
