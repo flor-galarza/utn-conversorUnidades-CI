@@ -89,7 +89,7 @@ jobs:
             --header "Content-Type: application/json" \
             --data '{"transition": {"id": "31"}}'
 
-       - name: Instalar Netlify CLI
+      - name: Instalar Netlify CLI
         run: npm install -g netlify-cli
 
       - name: Desplegar a Netlify
