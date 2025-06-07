@@ -40,5 +40,3 @@ You can preview the production build with `npm run preview`.
 
 # Conversor de Temperatura
 
-Quiero romper la build y q
-fefe
