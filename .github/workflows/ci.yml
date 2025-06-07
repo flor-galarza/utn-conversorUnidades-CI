@@ -84,12 +84,16 @@ jobs:
         if: github.ref == 'refs/heads/main' && success()
         run: |
           ISSUE_KEY=$(git log -1 --pretty=%B | grep -oE 'SCRUM-[0-9]+')
-          echo "Moviendo $ISSUE_KEY a Finalizada..."
-          curl --request POST \
-            --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-            --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            --header "Content-Type: application/json" \
-            --data '{"transition": {"id": "31"}}'
+          if [ -n "$ISSUE_KEY" ]; then
+            echo "Moviendo $ISSUE_KEY a Finalizada..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "31"}}'
+          else
+            echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
+          fi
 
       - name: Instalar Netlify CLI
         run: npm install -g netlify-cli
