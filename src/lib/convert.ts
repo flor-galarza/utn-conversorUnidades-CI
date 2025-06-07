@@ -1,5 +1,5 @@
 export function celsiusToFahrenheit(c: number): number {
-	return (c * 9) / 5 + 3; //Error para probar test arreglado
+	return (c * 9) / 5 + 32; //Error para probar test arreglado
 }
 
 export function fahrenheitToCelsius(f: number): number {
