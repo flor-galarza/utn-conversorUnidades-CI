@@ -40,4 +40,4 @@ You can preview the production build with `npm run preview`.
 
 # Conversor de Temperatura
 
-Quiero romper la build y que no despliegue
+Quiero romper la build y que no despliegue si no funciona
