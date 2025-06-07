@@ -88,3 +88,11 @@ jobs:
             --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             --header "Content-Type: application/json" \
             --data '{"transition": {"id": "31"}}'
+            
+       # Despliegue a Netlify solo si los tests y el CI pasaron
+      - name: Desplegar a Netlify
+        if: success() && github.ref == 'refs/heads/main'  # Solo si el CI pasó y es el branch 'main'
+        run: |
+          npm run build
+          # O cualquier otro paso necesario para Netlify
+          netlify deploy --prod  # Esto asume que tienes Netlify CLI configurado

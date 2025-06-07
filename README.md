@@ -40,5 +40,4 @@ You can preview the production build with `npm run preview`.
 
 # Conversor de Temperatura
 
-Actualización de prueba para CI con Slack.
-holaaa 
+Quiero romper la build y que no despliegue
