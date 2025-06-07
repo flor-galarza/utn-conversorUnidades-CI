@@ -56,28 +56,27 @@ jobs:
           echo "Commit: $COMMIT_MESSAGE"
           ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
 
-          # Si no se encuentra un ISSUE_KEY, se imprime un mensaje pero no se interrumpe la build
           if [ -z "$ISSUE_KEY" ]; then
             echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
+            exit 0
+          fi
+
+          if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
+            echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
+          elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
+            echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
           else
-            # Si se encuentra un ISSUE_KEY, se maneja la transición de Jira
-            if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
-              echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
-              curl --request POST \
-                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                --header "Content-Type: application/json" \
-                --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
-            elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
-              echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
-              curl --request POST \
-                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                --header "Content-Type: application/json" \
-                --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
-            else
-              echo "No se detectó acción válida para Jira."
-            fi
+            echo "No se detectó acción válida para Jira."
           fi
 
       - name: Mover a "Listo" si commit fue a main y CI pasó
