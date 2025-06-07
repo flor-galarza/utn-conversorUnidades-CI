@@ -27,8 +27,7 @@ jobs:
 
       - name: Correr tests E2E (Playwright)
         run: npx playwright install && npm run test:e2e
-      
-      
+
       - name: Notificar a Slack si CI tiene éxito
         if: success()
         uses: slackapi/slack-github-action@v1.24.0
@@ -51,32 +50,35 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-          
-
       - name: Detectar si el commit incluye un issue SCRUM-# y #start
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit: $COMMIT_MESSAGE"
           ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
-          
-          if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
-            echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
-            curl --request POST \
-              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              --header "Content-Type: application/json" \
-              --data '{"transition": {"id": "21"}}'
-          elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
-            echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
-            curl --request POST \
-              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              --header "Content-Type: application/json" \
-              --data '{"transition": {"id": "31"}}'
-          else
-            echo "No se detectó acción válida para Jira."
-          fi
 
+          # Si no se encuentra un ISSUE_KEY, se imprime un mensaje pero no se interrumpe la build
+          if [ -z "$ISSUE_KEY" ]; then
+            echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
+          else
+            # Si se encuentra un ISSUE_KEY, se maneja la transición de Jira
+            if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
+              echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
+              curl --request POST \
+                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+                --header "Content-Type: application/json" \
+                --data '{"transition": {"id": "21"}}'
+            elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
+              echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
+              curl --request POST \
+                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+                --header "Content-Type: application/json" \
+                --data '{"transition": {"id": "31"}}'
+            else
+              echo "No se detectó acción válida para Jira."
+            fi
+          fi
 
       - name: Mover a "Listo" si commit fue a main y CI pasó
         if: github.ref == 'refs/heads/main' && success()
