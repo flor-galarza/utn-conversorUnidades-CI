@@ -66,7 +66,7 @@ jobs:
               --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               --header "Content-Type: application/json" \
               --data '{"transition": {"id": "21"}}'
-          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
             echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
             curl --request POST \
               --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
