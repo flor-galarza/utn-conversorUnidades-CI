@@ -176,7 +176,7 @@ jobs:
           push: true  # ¡Sube la imagen!
           tags: |  # Tags para la imagen
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
-            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}  # Tag único por commit
+            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }} 
           file: ./Dockerfile  # Ruta al Dockerfile
       
       # Notificación de éxito en Slack
