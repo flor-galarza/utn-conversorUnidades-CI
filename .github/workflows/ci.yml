@@ -1,45 +1,74 @@
-name: CI SvelteKit
+###############################################################################
+# 🚀 CONFIGURACIÓN INICIAL DEL WORKFLOW
+###############################################################################
+name: CI SvelteKit  # Nombre épico del workflow que aparecerá en GitHub Actions
 
+# -----------------------------------------------
+# 🕹️ DISPARADORES DEL WORKFLOW (CUÁNDO SE EJECUTA)
+# -----------------------------------------------
 on:
   push:
-    branches: [main, ic-docker-slack]
+    branches: ["*"]  # Se activa en push a CUALQUIER rama (¡cuidado con esto en producción!)
   pull_request:
-    branches: [main, ic-docker-slack]
+    branches: [main]  # También en PRs dirigidas a 'main' (lo más común)
+
+###############################################################################
+# 🏗️ JOBS (TRABAJOS PARALELIZABLES)
+###############################################################################
 jobs:
+  # ==============================================
+  # 🔍 JOB 1: BUILD & TEST (La base de todo)
+  # ==============================================
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Ejecuta en una máquina virtual Ubuntu fresquita
 
+    # --------------------------
+    # 🧩 PASOS DEL JOB
+    # --------------------------
     steps:
+      # Paso 1: Obtener el código (como un git clone)
       - name: Checkout código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Acción oficial de GitHub para clonar el repo
 
+      # Paso 2: Instalar Node.js (¡sin esto no hay nada!)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20  # Versión LTS de Node (cambia esto si usas otra)
 
+      # Paso 3: Instalar dependencias (más rápido que npm install)
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci  # CI = Clean Install (usa package-lock.json exactamente)
 
+      # Paso 4: Tests unitarios (¡que no explote nada!)
       - name: Correr tests unitarios (Vitest)
-        run: npm run test:unit
+        run: npm run test:unit  # Ejecuta Vitest (asegúrate de tener el script)
 
+      # Paso 5: Tests E2E con Playwright (navegador real)
       - name: Correr tests E2E (Playwright)
-        run: npx playwright install && npm run test:e2e
+        run: |  # Multilínea: instala Playwright y corre tests
+          npx playwright install  # Instala browsers para testing
+          npm run test:e2e  # Ejecuta los tests E2E
 
+      # -----------------------------------
+      # 📢 NOTIFICACIONES A SLACK (ÉXITO)
+      # -----------------------------------
       - name: Notificar a Slack si CI tiene éxito
-        if: success()
+        if: success()  # Solo si TODO lo anterior funcionó
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload: |
+          payload: |  # Mensaje en formato JSON
             {
               "text": ":white_check_mark: CI *exitoso* en `${{ github.repository }}`.\n🔗 Ver: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  # Secreto con la URL del webhook
 
+      # -----------------------------------
+      # 📢 NOTIFICACIONES A SLACK (FALLO)
+      # -----------------------------------
       - name: Notificar a Slack si CI falla
-        if: failure()
+        if: failure()  # Justo lo contrario al anterior
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
@@ -49,16 +78,25 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+      # --------------------------------------------------
+      # 🎫 INTEGRACIÓN CON JIRA (DETECCIÓN DE ISSUES)
+      # --------------------------------------------------
       - name: Detectar si el commit incluye un issue SCRUM-# y #start
-        run: |
+        run: |  # Script Bash complejo (¡aguanta!)
+          # Obtiene el mensaje del último commit
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit: $COMMIT_MESSAGE"
+          
+          # Busca un patrón SCRUM-123 en el mensaje
           ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
+          
+          # Si no encuentra issue, sigue adelante
           if [ -z "$ISSUE_KEY" ]; then
             echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
             exit 0
           fi
 
+          # Si el commit tiene #start, mueve el issue a "En curso"
           if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
             echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
             curl --request POST \
@@ -66,6 +104,8 @@ jobs:
               --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               --header "Content-Type: application/json" \
               --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
+          
+          # Si es merge en main, mueve a "Finalizada"
           elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
             echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
             curl --request POST \
@@ -77,10 +117,13 @@ jobs:
             echo "No se detectó acción válida para Jira."
           fi
         shell: bash
-        continue-on-error: true
+        continue-on-error: true  # ¡Que no falle el workflow por Jira!
 
+      # --------------------------------------------------
+      # 🎫 JIRA PARTE 2 (MOVIMIENTO AUTOMÁTICO EN MAIN)
+      # --------------------------------------------------
       - name: Mover a "Listo" si commit fue a main y CI pasó
-        if: github.ref == 'refs/heads/main' && success()
+        if: github.ref == 'refs/heads/main' && success()  # Solo en main exitosa
         run: |
            ISSUE_KEY=$(git log -1 --pretty=%B | grep -oE 'SCRUM-[0-9]+')
            if [ -n "$ISSUE_KEY" ]; then
@@ -96,40 +139,47 @@ jobs:
         shell: bash
         continue-on-error: true
 
-      # --- Nuevo Job para Docker ---
+  # ==============================================
+  # 🐳 JOB 2: DOCKER BUILD & PUSH (¡Contenerización!)
+  # ==============================================
   docker-build-push:
-    needs: build-test
+    needs: build-test  # Depende del job anterior
     runs-on: ubuntu-latest
-    # --- if: github.ref == 'refs/heads/main'  --- 
     
+    # Permisos necesarios para GHCR (GitHub Container Registry)
     permissions:
-      packages: write
-      contents: read
+      packages: write  # Para subir imágenes
+      contents: read   # Para leer el código
 
     steps:
+      # Paso 1: Obtener el código (again)
       - name: Checkout código
         uses: actions/checkout@v4
 
+      # Paso 2: Configurar Docker Buildx (para builds multi-arch)
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Paso 3: Login en GitHub Container Registry
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io  # Registro de GitHub
+          username: ${{ github.actor }}  # Tu usuario
+          password: ${{ secrets.GITHUB_TOKEN }}  # Token automático
 
+      # Paso 4: Construir y subir la imagen
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          tags: |
+          context: .  # Usa el directorio actual
+          push: true  # ¡Sube la imagen!
+          tags: |  # Tags para la imagen
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
-            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
-          file: ./Dockerfile
+            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}  # Tag único por commit
+          file: ./Dockerfile  # Ruta al Dockerfile
       
+      # Notificación de éxito en Slack
       - name: Notificar a Slack si Docker build/push fue exitoso
         if: success()
         uses: slackapi/slack-github-action@v1.24.0
@@ -141,6 +191,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+      # Notificación de fallo en Slack
       - name: Notificar a Slack si Docker build/push falló
         if: failure()
         uses: slackapi/slack-github-action@v1.24.0
@@ -152,29 +203,41 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # --- Job existente para Netlify (con ajustes) ---
+  # ==============================================
+  # 🌐 JOB 3: DEPLOY A NETLIFY (¡A producción!)
+  # ==============================================
   deploy-netlify:
-    needs: build-test
+    needs: build-test  # Depende del primer job
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && success()
+    if: github.ref == 'refs/heads/main' && success()  # Solo en main exitosa
 
     steps:
+      # Paso 1: Obtener el código (sí, otra vez)
       - name: Checkout código
         uses: actions/checkout@v4
 
+      # Paso 2: Instalar Node.js (Netlify necesita buildear)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Paso 3: Instalar dependencias
       - name: Instalar dependencias
         run: npm ci
 
+      # Paso 4: Build para producción
       - name: Build para Netlify
-        run: npm run build
+        run: npm run build  # Asegúrate de que este script exista
 
+      # Paso 5: Instalar CLI de Netlify
       - name: Instalar Netlify CLI
-        run: npm install -g netlify-cli
+        run: npm install -g netlify-cli  # Instalación global
 
+      # Paso 6: ¡Despliegue!
       - name: Desplegar a Netlify
         run: netlify deploy --prod --dir=build --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} --site=${{ secrets.NETLIFY_SITE_ID }}
+        # --prod: despliegue producción
+        # --dir: carpeta con los archivos estáticos
+        # --auth: token de Netlify (secreto)
+        # --site: ID del sitio (secreto)
