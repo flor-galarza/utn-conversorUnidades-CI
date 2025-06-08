@@ -2,10 +2,9 @@ name: CI SvelteKit
 
 on:
   push:
-    branches: [main]
+    branches: [main, ic-docker-slack]
   pull_request:
-    branches: [main]
-
+    branches: [main, ic-docker-slack]
 jobs:
   build-test:
     runs-on: ubuntu-latest
