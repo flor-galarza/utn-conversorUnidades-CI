@@ -130,6 +130,28 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
           file: ./Dockerfile
+      
+      - name: Notificar a Slack si Docker build/push fue exitoso
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": ":whale: Docker build/push *exitoso* en `${{ github.repository }}`.\n🔗 Ver: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notificar a Slack si Docker build/push falló
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": ":x: Docker build/push *falló* en `${{ github.repository }}`.\n🛠️ Ver detalles: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # --- Job existente para Netlify (con ajustes) ---
   deploy-netlify:
