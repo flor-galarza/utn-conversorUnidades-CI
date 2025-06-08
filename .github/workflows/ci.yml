@@ -129,7 +129,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
-            file: ./Dockerfile
+          file: ./Dockerfile
 
   # --- Job existente para Netlify (con ajustes) ---
   deploy-netlify:
