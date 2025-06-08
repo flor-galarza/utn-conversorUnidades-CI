@@ -127,9 +127,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.sha }}
-          file: ./Dockerfile
+            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
+            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
+            file: ./Dockerfile
 
   # --- Job existente para Netlify (con ajustes) ---
   deploy-netlify:
