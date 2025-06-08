@@ -100,7 +100,7 @@ jobs:
   docker-build-push:
     needs: build-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Solo ejecutar en pushes a main
+    # --- if: github.ref == 'refs/heads/main'  --- 
     
     permissions:
       packages: write
