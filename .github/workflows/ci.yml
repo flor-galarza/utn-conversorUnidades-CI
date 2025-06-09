@@ -49,6 +49,13 @@ jobs:
         run: |  # Multilínea: instala Playwright y corre tests
           npx playwright install  # Instala browsers para testing
           npm run test:e2e  # Ejecuta los tests E2E
+      
+      # Paso extra: Subir build como artefacto para otros jobs
+      - name: Subir build como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
 
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
@@ -212,32 +219,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && success()  # Solo en main exitosa
 
     steps:
-      # Paso 1: Obtener el código (sí, otra vez)
-      - name: Checkout código
-        uses: actions/checkout@v4
-
-      # Paso 2: Instalar Node.js (Netlify necesita buildear)
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Paso 1: Descargar build desde artefacto
+      - name: Descargar build desde artefacto
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20
+          name: build
+          path: build
 
-      # Paso 3: Instalar dependencias
-      - name: Instalar dependencias
-        run: npm ci
-
-      # Paso 4: Build para producción
-      - name: Build para Netlify
-        run: npm run build  # Asegúrate de que este script exista
-
-      # Paso 5: Instalar CLI de Netlify
+      # Paso 2: Instalar Netlify CLI
       - name: Instalar Netlify CLI
-        run: npm install -g netlify-cli  # Instalación global
+        run: npm install -g netlify-cli
 
-      # Paso 6: ¡Despliegue!
+      # Paso 3: ¡Despliegue!
       - name: Desplegar a Netlify
         run: netlify deploy --prod --dir=build --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} --site=${{ secrets.NETLIFY_SITE_ID }}
-        # --prod: despliegue producción
-        # --dir: carpeta con los archivos estáticos
-        # --auth: token de Netlify (secreto)
-        # --site: ID del sitio (secreto)
+      
+   
