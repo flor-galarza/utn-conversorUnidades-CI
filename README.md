@@ -40,4 +40,4 @@ You can preview the production build with `npm run preview`.
 
 # Conversor de Temperatura
 
-si
+si sisi
