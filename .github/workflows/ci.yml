@@ -88,31 +88,35 @@ jobs:
           # Busca un patrón SCRUM-123 en el mensaje
           ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
 
+          # Si no encuentra issue, termina el paso exitosamente
           if [ -z "$ISSUE_KEY" ]; then
             echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
-          else
-            # Si el commit tiene #start, mueve el issue a "En curso"
-            if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
-              echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
-              curl --request POST \
-                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                --header "Content-Type: application/json" \
-                --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
-            fi
-
-            # Si es push exitoso a main, mueve el issue a "Finalizada"
-            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-              echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
-              curl --request POST \
-                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-                --header "Content-Type: application/json" \
-                --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
-            fi
+            exit 0
           fi
+
+          # Si el commit tiene #start, mueve el issue a "En curso"
+          if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
+            echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
+          fi
+
+          # Si es push exitoso a main, mueve el issue a "Finalizada"
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
+            curl --request POST \
+              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
+          fi
+
           exit 0
         shell: bash
+        continue-on-error: true
       
 
   # ===============================
