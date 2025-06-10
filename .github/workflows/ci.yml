@@ -111,8 +111,9 @@ jobs:
                 --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
             fi
           fi
+          exit 0
         shell: bash
-        continue-on-error: true
+      
 
   # ===============================
   # 🐳 JOB 2: DOCKER BUILD & PUSH 
