@@ -1,56 +1,47 @@
-###############################################################################
-# 🚀 CONFIGURACIÓN INICIAL DEL WORKFLOW
-###############################################################################
-name: CI SvelteKit  # Nombre épico del workflow que aparecerá en GitHub Actions
+name: CI SvelteKit 
 
 # -----------------------------------------------
 # 🕹️ DISPARADORES DEL WORKFLOW (CUÁNDO SE EJECUTA)
 # -----------------------------------------------
 on:
   push:
-    branches: ["*"]  # Se activa en push a CUALQUIER rama (¡cuidado con esto en producción!)
+    branches: ["main"] 
   pull_request:
-    branches: [main]  # También en PRs dirigidas a 'main' (lo más común)
+    branches: [main]  
 
-###############################################################################
-# 🏗️ JOBS (TRABAJOS PARALELIZABLES)
-###############################################################################
 jobs:
   # ==============================================
   # 🔍 JOB 1: BUILD & TEST (La base de todo)
   # ==============================================
   build-test:
-    runs-on: ubuntu-latest  # Ejecuta en una máquina virtual Ubuntu fresquita
+    runs-on: ubuntu-latest  # Ejecuta en una máquina virtual Ubuntu
 
-    # --------------------------
-    # 🧩 PASOS DEL JOB
-    # --------------------------
     steps:
       # Paso 1: Obtener el código (como un git clone)
       - name: Checkout código
-        uses: actions/checkout@v4  # Acción oficial de GitHub para clonar el repo
+        uses: actions/checkout@v4 
 
-      # Paso 2: Instalar Node.js (¡sin esto no hay nada!)
+      # Paso 2: Instalar Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20  # Versión LTS de Node (cambia esto si usas otra)
+          node-version: 20 
 
-      # Paso 3: Instalar dependencias (más rápido que npm install)
+      # Paso 3: Instalar dependencias 
       - name: Instalar dependencias
-        run: npm ci  # CI = Clean Install (usa package-lock.json exactamente)
+        run: npm ci  # CI significa "clean install"
 
-      # Paso 4: Tests unitarios (¡que no explote nada!)
+      # Paso 4: Tests unitarios
       - name: Correr tests unitarios (Vitest)
-        run: npm run test:unit  # Ejecuta Vitest (asegúrate de tener el script)
+        run: npm run test:unit  
 
       # Paso 5: Tests E2E con Playwright (navegador real)
       - name: Correr tests E2E (Playwright)
         run: |  # Multilínea: instala Playwright y corre tests
-          npx playwright install  # Instala browsers para testing
-          npm run test:e2e  # Ejecuta los tests E2E
-      
-      # Paso extra: Subir build como artefacto para otros jobs
+          npx playwright install 
+          npm run test:e2e  
+
+      # Paso 6: Subir build como artefacto para otros jobs
       - name: Subir build como artefacto
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +66,7 @@ jobs:
       # 📢 NOTIFICACIONES A SLACK (FALLO)
       # -----------------------------------
       - name: Notificar a Slack si CI falla
-        if: failure()  # Justo lo contrario al anterior
+        if: failure()  
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
@@ -96,6 +87,21 @@ jobs:
           
           # Busca un patrón SCRUM-123 en el mensaje
           ISSUE_KEY=$(echo "$COMMIT_MESSAGE" | grep -oE 'SCRUM-[0-9]+')
+
+          # Si no encuentra issue, sigue adelante
+          if [ -z "$ISSUE_KEY" ]; then
+            echo "No se encontró un ISSUE_KEY en el mensaje del commit. Continuando con la build..."
+          else
+            # Si el commit tiene #start, mueve el issue a "En curso"
+            if echo "$COMMIT_MESSAGE" | grep -q "#start"; then
+              echo "Moviendo $ISSUE_KEY a En curso (In Progress)..."
+              curl --request POST \
+                --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
+                --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+                --header "Content-Type: application/json" \
+                --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
+            fi
+          fi
           
           # Si no encuentra issue, sigue adelante
           if [ -z "$ISSUE_KEY" ]; then
@@ -111,20 +117,9 @@ jobs:
               --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               --header "Content-Type: application/json" \
               --data '{"transition": {"id": "21"}}' || echo "Error al mover $ISSUE_KEY a En curso. Continuando con la build..."
-          
-          # Si es merge en main, mueve a "Finalizada"
-          elif [ "$GITHUB_REF" == "refs/heads/main" ]; then
-            echo "Moviendo $ISSUE_KEY a Finalizada (Done)..."
-            curl --request POST \
-              --url "https://florgalarza.atlassian.net/rest/api/3/issue/$ISSUE_KEY/transitions" \
-              --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-              --header "Content-Type: application/json" \
-              --data '{"transition": {"id": "31"}}' || echo "Error al mover $ISSUE_KEY a Finalizada. Continuando con la build..."
-          else
-            echo "No se detectó acción válida para Jira."
-          fi
+        
         shell: bash
-        continue-on-error: true  # ¡Que no falle el workflow por Jira!
+        continue-on-error: true  # No falla el job si no pone start o el id de jira 
 
       # --------------------------------------------------
       # 🎫 JIRA PARTE 2 (MOVIMIENTO AUTOMÁTICO EN MAIN)
@@ -146,20 +141,20 @@ jobs:
         shell: bash
         continue-on-error: true
 
-  # ==============================================
-  # 🐳 JOB 2: DOCKER BUILD & PUSH (¡Contenerización!)
-  # ==============================================
+  # ===============================
+  # 🐳 JOB 2: DOCKER BUILD & PUSH 
+  # ===============================
   docker-build-push:
-    needs: build-test  # Depende del job anterior
+    needs: build-test  # Depende del primer job (build-test)
     runs-on: ubuntu-latest
     
     # Permisos necesarios para GHCR (GitHub Container Registry)
     permissions:
-      packages: write  # Para subir imágenes
-      contents: read   # Para leer el código
+      packages: write 
+      contents: read   
 
     steps:
-      # Paso 1: Obtener el código (again)
+      # Paso 1: Obtener el código (como un git clone)
       - name: Checkout código
         uses: actions/checkout@v4
 
@@ -179,11 +174,11 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .  # Usa el directorio actual
-          push: true  # ¡Sube la imagen!
-          tags: |  # Tags para la imagen
+          context: . 
+          push: true 
+          tags: | 
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
-            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }} 
+            ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
           file: ./Dockerfile  # Ruta al Dockerfile
       
       # Notificación de éxito en Slack
@@ -210,9 +205,9 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ==============================================
-  # 🌐 JOB 3: DEPLOY A NETLIFY (¡A producción!)
-  # ==============================================
+  # ============================
+  # 🌐 JOB 3: DEPLOY A NETLIFY 
+  # ============================
   deploy-netlify:
     needs: build-test  # Depende del primer job
     runs-on: ubuntu-latest

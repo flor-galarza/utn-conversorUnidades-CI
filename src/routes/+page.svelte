@@ -102,7 +102,7 @@
   <h1>Hola, bienvenido!</h1>
   <div class="desc">
     Este es un proyecto de la UTN para la materia <b>Ingeniería y Calidad de Software</b>,<br>
-    con el objetivo de aprender a crear un entorno de <b>Integración Continua</b>.
+    con el objetivo de aprender a crear un pipelineq de <b>Integración Continua</b>.
   </div>
   <div class="subtitle">Conversor de Temperatura</div>
   <div class="input-row">
