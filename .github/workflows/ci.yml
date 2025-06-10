@@ -5,7 +5,7 @@ name: CI SvelteKit
 # -----------------------------------------------
 on:
   push:
-    branches: ["main"] 
+    branches: [main] 
   pull_request:
     branches: [main]  
 
@@ -40,13 +40,6 @@ jobs:
         run: |  # Multilínea: instala Playwright y corre tests
           npx playwright install 
           npm run test:e2e  
-
-      # Paso 6: Subir build como artefacto para otros jobs
-      - name: Subir build como artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: build
 
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
