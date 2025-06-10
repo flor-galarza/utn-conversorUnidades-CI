@@ -183,27 +183,4 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ============================
-  # 🌐 JOB 3: DEPLOY A NETLIFY 
-  # ============================
-  deploy-netlify:
-    needs: build-test  # Depende del primer job
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && success()  # Solo en main exitosa
-
-    steps:
-      # Paso 1: Descargar build desde artefacto
-      - name: Descargar build desde artefacto
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: build
-
-      # Paso 2: Instalar Netlify CLI
-      - name: Instalar Netlify CLI
-        run: npm install -g netlify-cli
-
-      # Paso 3: ¡Despliegue!
-      - name: Desplegar a Netlify
-        run: netlify deploy --prod --dir=build --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} --site=${{ secrets.NETLIFY_SITE_ID }}
-
+  
