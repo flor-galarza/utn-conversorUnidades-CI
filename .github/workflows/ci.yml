@@ -1,8 +1,8 @@
 name: CI SvelteKit
 
-# -----------------------------------------------
-# 🕹️ DISPARADORES DEL WORKFLOW (CUÁNDO SE EJECUTA)
-# -----------------------------------------------
+permissions:
+  contents: write
+
 on:
   push:
     branches: ['*']
@@ -40,10 +40,41 @@ jobs:
         run: | # Multilínea: instala Playwright y corre tests
           npx playwright install 
           npm run test:e2e
+      
+      - name: Formatear código (Prettier)
+        run: npm run format
 
       # Paso 6: Chequear formato y lint
       - name: Chequear formato y lint (Prettier + ESLint)
         run: npm run lint
+
+      # Paso 7: Generar la build de producción
+      - name: Guardar build como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
+
+      # Nuevo job para deploy a GitHub Pages:
+  deploy-gh-pages:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar build
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
+
+      - name: Deploy a GitHub Pages
+        env:
+          ADAPTER: static
+          GITHUB_PAGES: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
 
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
