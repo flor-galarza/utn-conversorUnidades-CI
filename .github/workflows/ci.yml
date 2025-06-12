@@ -5,7 +5,7 @@ name: CI SvelteKit
 # -----------------------------------------------
 on:
   push:
-    branches: [main]
+    branches: ["*"]
   pull_request:
     branches: [main]
 
@@ -121,6 +121,8 @@ jobs:
   docker-build-push:
     needs: build-test # Depende del primer job (build-test)
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
 
     # Permisos necesarios para GHCR (GitHub Container Registry)
     permissions:
