@@ -5,7 +5,7 @@ name: CI SvelteKit
 # -----------------------------------------------
 on:
   push:
-    branches: ["*"]
+    branches: ['*']
   pull_request:
     branches: [main]
 
@@ -44,14 +44,14 @@ jobs:
       # Paso 6: Chequear formato y lint
       - name: Chequear formato y lint (Prettier + ESLint)
         run: npm run lint
-      
+
       # Paso 7: Generar la build de producción
       - name: Guardar build como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: build
           path: build
-      
+
       # Nuevo job para deploy a GitHub Pages:
   deploy-gh-pages:
     needs: build-test
