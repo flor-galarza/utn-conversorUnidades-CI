@@ -28,8 +28,8 @@ jobs:
           node-version: 20
 
       # Paso 3: Instalar dependencias
-      - name: Instalar dependencias
-        run: npm ci # CI significa "clean install"
+      #- name: Instalar dependencias
+        #run: npm ci # CI significa "clean install"
 
       # Paso 4: Tests unitarios
       - name: Correr tests unitarios (Vitest)
