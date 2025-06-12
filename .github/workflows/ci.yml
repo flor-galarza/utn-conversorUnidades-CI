@@ -1,45 +1,45 @@
-name: CI SvelteKit 
+name: CI SvelteKit
 
 # -----------------------------------------------
 # 🕹️ DISPARADORES DEL WORKFLOW (CUÁNDO SE EJECUTA)
 # -----------------------------------------------
 on:
   push:
-    branches: [main] 
+    branches: [main]
   pull_request:
-    branches: [main]  
+    branches: [main]
 
 jobs:
   # ==============================================
   # 🔍 JOB 1: BUILD & TEST (La base de todo)
   # ==============================================
   build-test:
-    runs-on: ubuntu-latest  # Ejecuta en una máquina virtual Ubuntu
+    runs-on: ubuntu-latest # Ejecuta en una máquina virtual Ubuntu
 
     steps:
       # Paso 1: Obtener el código (como un git clone)
       - name: Checkout código
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       # Paso 2: Instalar Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 
+          node-version: 20
 
-      # Paso 3: Instalar dependencias 
+      # Paso 3: Instalar dependencias
       - name: Instalar dependencias
-        run: npm ci  # CI significa "clean install"
+        run: npm ci # CI significa "clean install"
 
       # Paso 4: Tests unitarios
       - name: Correr tests unitarios (Vitest)
-        run: npm run test:unit  
+        run: npm run test:unit
 
       # Paso 5: Tests E2E con Playwright (navegador real)
       - name: Correr tests E2E (Playwright)
-        run: |  # Multilínea: instala Playwright y corre tests
+        run: | # Multilínea: instala Playwright y corre tests
           npx playwright install 
-          npm run test:e2e  
+          npm run test:e2e
 
       # Paso 6: Chequear formato y lint
       - name: Chequear formato y lint (Prettier + ESLint)
@@ -49,21 +49,21 @@ jobs:
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
       # -----------------------------------
       - name: Notificar a Slack si CI tiene éxito
-        if: success()  # Solo si TODO lo anterior funcionó
+        if: success() # Solo si TODO lo anterior funcionó
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload: |  # Mensaje en formato JSON
+          payload: | # Mensaje en formato JSON
             {
               "text": ":white_check_mark: CI *exitoso* en `${{ github.repository }}`.\n🔗 Ver: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  # Secreto con la URL del webhook
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # Secreto con la URL del webhook
 
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (FALLO)
       # -----------------------------------
       - name: Notificar a Slack si CI falla
-        if: failure()  
+        if: failure()
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
@@ -114,19 +114,18 @@ jobs:
           exit 0
         shell: bash
         continue-on-error: true
-      
 
   # ===============================
-  # 🐳 JOB 2: DOCKER BUILD & PUSH 
+  # 🐳 JOB 2: DOCKER BUILD & PUSH
   # ===============================
   docker-build-push:
-    needs: build-test  # Depende del primer job (build-test)
+    needs: build-test # Depende del primer job (build-test)
     runs-on: ubuntu-latest
-    
+
     # Permisos necesarios para GHCR (GitHub Container Registry)
     permissions:
-      packages: write 
-      contents: read   
+      packages: write
+      contents: read
 
     steps:
       # Paso 1: Obtener el código (como un git clone)
@@ -141,21 +140,21 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io  # Registro de GitHub
-          username: ${{ github.actor }}  # Tu usuario
-          password: ${{ secrets.GITHUB_TOKEN }}  # Token automático
+          registry: ghcr.io # Registro de GitHub
+          username: ${{ github.actor }} # Tu usuario
+          password: ${{ secrets.GITHUB_TOKEN }} # Token automático
 
       # Paso 4: Construir y subir la imagen
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: . 
-          push: true 
-          tags: | 
+          context: .
+          push: true
+          tags: |
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
-          file: ./Dockerfile  # Ruta al Dockerfile
-      
+          file: ./Dockerfile # Ruta al Dockerfile
+
       # Notificación de éxito en Slack
       - name: Notificar a Slack si Docker build/push fue exitoso
         if: success()
@@ -179,5 +178,3 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-
