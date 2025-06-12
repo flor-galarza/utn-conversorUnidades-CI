@@ -1,5 +1,5 @@
 export function celsiusToFahrenheit(c: number): number {
-	return (c * 9) / 5 + 32;
+	return (c * 9) / 5 + 30;
 }
 
 export function fahrenheitToCelsius(f: number): number {
