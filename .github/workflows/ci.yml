@@ -41,6 +41,10 @@ jobs:
           npx playwright install 
           npm run test:e2e  
 
+      # Paso 6: Chequear formato y lint
+      - name: Chequear formato y lint (Prettier + ESLint)
+        run: npm run lint
+
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
       # -----------------------------------
@@ -176,4 +180,4 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  
+
