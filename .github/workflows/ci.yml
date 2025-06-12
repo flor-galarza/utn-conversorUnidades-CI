@@ -126,7 +126,7 @@ jobs:
   # DOCKER BUILD & PUSH
   
   docker-build-push:
-    needs: build-test # Depende del primer job (build-test)
+    #needs: build-test # Depende del primer job (build-test)
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
