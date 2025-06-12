@@ -81,22 +81,23 @@ npm install
 ```sh
 npm run dev
 ```
+
 Abre [http://localhost:5173](http://localhost:5173) en tu navegador.
 
 ---
 
 ## 🧪 Testing
 
-- **Tests unitarios:**  
+- **Tests unitarios:**
   ```sh
   npm run test:unit
   ```
-- **Tests E2E:**  
+- **Tests E2E:**
   ```sh
   npx playwright install
   npm run test:e2e
   ```
-- **Lint y formato:**  
+- **Lint y formato:**
   ```sh
   npm run lint
   npm run format
@@ -109,6 +110,7 @@ Abre [http://localhost:5173](http://localhost:5173) en tu navegador.
 ```sh
 npm run build
 ```
+
 Esto corre los tests unitarios y luego genera el build de producción.
 
 ---
@@ -132,7 +134,7 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
 
 1. El workflow de GitHub Actions publica la imagen en GHCR.
 2. En Render, crea un servicio tipo **"Web Service" → "Existing Image"**.
-3. Usa la imagen:  
+3. Usa la imagen:
    ```
    ghcr.io/flor-galarza/utn-conversorunidades-ci:latest
    ```
@@ -141,7 +143,7 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
 ### GitHub Pages (estático)
 
 1. El workflow de CI genera el build estático y lo publica en la rama `gh-pages`.
-2. La app estará disponible en:  
+2. La app estará disponible en:
    ```
    https://flor-galarza.github.io/utn-conversorUnidades-CI/
    ```
@@ -164,11 +166,11 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
 ## 📝 Convenciones de commits y Jira
 
 - Para mover una historia a **"En curso"**:  
-  Incluí el issue y `#start` en el mensaje, por ejemplo:  
+  Incluí el issue y `#start` en el mensaje, por ejemplo:
   ```
   SCRUM-123 #start: implementa conversión de Celsius a Fahrenheit
   ```
-- Para mover una historia a **"Finalizada"** (al hacer merge a main):  
+- Para mover una historia a **"Finalizada"** (al hacer merge a main):
   ```
   SCRUM-123: finaliza conversión y agrega tests
   ```
