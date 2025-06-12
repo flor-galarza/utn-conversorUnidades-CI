@@ -10,9 +10,9 @@ on:
     branches: [main]
 
 jobs:
-  # ==============================================
-  # 🔍 JOB 1: BUILD & TEST (La base de todo)
-  # ==============================================
+  
+  # BUILD & TEST 
+  
   build-test:
     runs-on: ubuntu-latest # Ejecuta en una máquina virtual Ubuntu
 
@@ -118,9 +118,9 @@ jobs:
         shell: bash
         continue-on-error: true
 
-  # ===============================
-  # 🐳 JOB 2: DOCKER BUILD & PUSH
-  # ===============================
+  
+  # DOCKER BUILD & PUSH
+  
   docker-build-push:
     needs: build-test # Depende del primer job (build-test)
     runs-on: ubuntu-latest
