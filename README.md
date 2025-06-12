@@ -39,7 +39,7 @@ You can preview the production build with `npm run preview`.
 
 # Conversor de Unidades CI
 
-Conversor de temperatura desarrollado en SvelteKit con integración continua, testing automatizado, despliegue en Docker, Render y GitHub Pages, y automatización con Jira.
+Conversor de temperatura desarrollado en SvelteKit con integración continua, testing automatizado, despliegue en Docker, Render y automatización con Jira.
 
 ---
 
@@ -60,7 +60,6 @@ Conversor de temperatura desarrollado en SvelteKit con integración continua, te
 - [Prettier](https://prettier.io/) y [ESLint](https://eslint.org/) (calidad de código)
 - [Docker](https://www.docker.com/)
 - [Render](https://render.com/) (deploy Docker)
-- [GitHub Pages](https://pages.github.com/) (deploy estático)
 - [Jira](https://www.atlassian.com/software/jira) (automatización de issues)
 - [GitHub Actions](https://github.com/features/actions) (CI/CD)
 
@@ -140,16 +139,6 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
    ```
 4. Configura el token de acceso si tu repo es privado.
 
-### GitHub Pages (estático)
-
-1. El workflow de CI genera el build estático y lo publica en la rama `gh-pages`.
-2. La app estará disponible en:
-   ```
-   https://flor-galarza.github.io/utn-conversorUnidades-CI/
-   ```
-
----
-
 ## 🔄 Integración Continua (CI/CD)
 
 - Cada push o pull request a `main` ejecuta:
@@ -157,7 +146,6 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
   - Tests unitarios y E2E
   - Build de producción
   - Publicación de imagen Docker en GHCR
-  - Deploy a GitHub Pages
   - Notificaciones a Slack
   - Automatización de issues en Jira (mueve a "En curso" o "Finalizada" según el mensaje del commit)
 
@@ -194,5 +182,3 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
 ---
 
 **¡Contribuciones y sugerencias son bienvenidas!**
-
-si
