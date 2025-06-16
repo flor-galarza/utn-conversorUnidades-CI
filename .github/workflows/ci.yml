@@ -10,9 +10,8 @@ on:
     branches: [main]
 
 jobs:
-  
-  # BUILD & TEST 
-  
+  # BUILD & TEST
+
   build-test:
     runs-on: ubuntu-latest # Ejecuta en una máquina virtual Ubuntu
 
@@ -118,9 +117,8 @@ jobs:
         shell: bash
         continue-on-error: true
 
-  
   # DOCKER BUILD & PUSH
-  
+
   docker-build-push:
     #needs: build-test # Depende del primer job (build-test)
     runs-on: ubuntu-latest
@@ -182,3 +180,12 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Despliegue a Render automáticamente si el CI pasa y está en main
+      - name: Desplegar a Render
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          curl -X POST https://api.render.com/v1/services/YOUR_SERVICE_ID/deploy \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{"branch": "main"}'
