@@ -182,3 +182,4 @@ La app estará disponible en [http://localhost:3000](http://localhost:3000).
 ---
 
 **¡Contribuciones y sugerencias son bienvenidas!**
+va
