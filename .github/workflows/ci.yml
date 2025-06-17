@@ -47,6 +47,15 @@ jobs:
       - name: Chequear formato y lint (Prettier + ESLint)
         run: npm run lint
 
+        # Despliegue a Render automáticamente si el CI pasa y está en main
+      - name: Desplegar a Render
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          curl -X POST https://api.render.com/v1/services/YOUR_SERVICE_ID/deploy \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{"branch": "main"}'
+
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
       # -----------------------------------
@@ -180,12 +189,3 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      # Despliegue a Render automáticamente si el CI pasa y está en main
-      - name: Desplegar a Render
-        if: github.ref == 'refs/heads/main' && success()
-        run: |
-          curl -X POST https://api.render.com/v1/services/YOUR_SERVICE_ID/deploy \
-          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d '{"branch": "main"}'

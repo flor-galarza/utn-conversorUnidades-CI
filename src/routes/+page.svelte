@@ -24,8 +24,7 @@
 <div class="container">
 	<h1>Hola, bienvenido!</h1>
 	<div class="desc">
-		Este es un proyecto de la UTN para la materia <b>Ingeniería y Calidad de Software</b
-		>,<br />
+		Este es un proyecto de la UTN para la materia <b>Ingeniería y Calidad de Software</b>,<br />
 		con el objetivo de aprender a crear un pipeline de <b>Integración Continua</b>.
 	</div>
 	<div class="subtitle">Conversor de Temperatura</div>
