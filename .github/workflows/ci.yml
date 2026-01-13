@@ -47,14 +47,6 @@ jobs:
       - name: Chequear formato y lint (Prettier + ESLint)
         run: npm run lint
 
-        # Despliegue a Render automáticamente si el CI pasa y está en main
-      - name: Desplegar a Render
-        if: github.ref == 'refs/heads/main' && success()
-        run: |
-          curl -X POST https://api.render.com/v1/services/SERVICE_RENDER_ID/deploy \
-          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d '{"branch": "main"}'
 
       # -----------------------------------
       # 📢 NOTIFICACIONES A SLACK (ÉXITO)
@@ -165,6 +157,9 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:latest
             ghcr.io/${{ github.repository_owner }}/utn-conversorunidades-ci:${{ github.sha }}
           file: ./Dockerfile # Ruta al Dockerfile
+
+      - name: Trigger Render Deploy Hook
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
 
       # Notificación de éxito en Slack
       - name: Notificar a Slack si Docker build/push fue exitoso
